@@ -31,6 +31,7 @@
 #pragma link C++ class genie::rew::GReWeightNuXSecHelper;
 #pragma link C++ class genie::rew::GReWeightXSecEmpiricalMEC;
 #pragma link C++ class genie::rew::GReWeightXSecMEC;
+#pragma link C++ class genie::rew::GReWeightRESBugFix;
 
 #pragma link C++ ioctortype TRootIOCtor;
 

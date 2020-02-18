@@ -117,6 +117,7 @@ std::map<GSyst_t, std::string> GSyst::BuildGSystToStringMap() {
   temp_map[ kXSecTwkDial_FracDelta_CCMEC ] = "FracDelta_CCMEC";
   temp_map[ kXSecTwkDial_XSecShape_CCMEC ] = "XSecShape_CCMEC";
   temp_map[ kXSecTwkDial_RPA_CCQE ] = "RPA_CCQE";
+  temp_map[ kBugFixDial_RESRootino ] = "RESRootino";
 
   return temp_map;
 }

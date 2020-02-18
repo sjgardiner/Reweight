@@ -206,6 +206,11 @@ typedef enum EGSyst {
   // one with RPA off (only gives non-unit weights for Nieves CCQE)
   kXSecTwkDial_RPA_CCQE,
 
+  // Dummy knob used to activate/deactivate weight calculator
+  // that fixes the "RES ROOTino" bug (see GENIE docDB #153).
+  // The knob value is not meaningful.
+  kBugFixDial_RESRootino,
+
   //
   // Misc
   //
