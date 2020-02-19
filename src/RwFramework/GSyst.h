@@ -211,6 +211,11 @@ typedef enum EGSyst {
   // The knob value is not meaningful.
   kBugFixDial_RESRootino,
 
+  // Knobs to independently scale the total cross sections for CC and NC
+  // coherent pion production
+  kXSecTwkDial_NormCCCOH,
+  kXSecTwkDial_NormNCCOH,
+
   //
   // Misc
   //
