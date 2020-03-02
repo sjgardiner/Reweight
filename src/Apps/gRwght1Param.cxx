@@ -129,6 +129,7 @@
 #include "RwCalculators/GReWeightXSecMEC.h"
 #include "RwCalculators/GReWeightRESBugFix.h"
 #include "RwCalculators/GReWeightNuXSecCOHuB.h"
+#include "RwCalculators/GReWeightDeltaradAngle.h"
 
 using std::string;
 using std::ostringstream;
@@ -260,6 +261,7 @@ int main(int argc, char ** argv)
   rw.AdoptWghtCalc( "xsec_mec",        new GReWeightXSecMEC );
   rw.AdoptWghtCalc( "res_bugfix",      new GReWeightRESBugFix );
   rw.AdoptWghtCalc( "xsec_coh_ub",     new GReWeightNuXSecCOHuB );
+  rw.AdoptWghtCalc( "delta_rad",       new GReWeightDeltaradAngle);
 
   // Get GSystSet and include the (single) input systematic parameter
 
