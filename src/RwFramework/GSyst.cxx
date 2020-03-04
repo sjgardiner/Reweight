@@ -121,6 +121,7 @@ std::map<GSyst_t, std::string> GSyst::BuildGSystToStringMap() {
   temp_map[ kXSecTwkDial_NormCCCOH ] = "NormCCCOH";
   temp_map[ kXSecTwkDial_NormNCCOH ] = "NormNCCOH";
   temp_map[ kRDcyTwkDial_Theta_Delta2NRad ] = "ThetaDelta2NRad";
+  temp_map[ kXSecTwkDial_CoulombCCQE ] = "CoulombCCQE";
 
   return temp_map;
 }
