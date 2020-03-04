@@ -223,6 +223,11 @@ typedef enum EGSyst {
   // correction factor in the Nieves CCQE model
   kXSecTwkDial_CoulombCCQE,
 
+  // Knobs to independently scale normalization of all non-COH events that
+  // produce a pi0
+  kProdTwkDial_NormCCNonCOHPi0,
+  kProdTwkDial_NormNCNonCOHPi0,
+
   //
   // Misc
   //

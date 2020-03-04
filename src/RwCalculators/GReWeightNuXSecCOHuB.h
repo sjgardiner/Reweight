@@ -42,12 +42,19 @@ namespace rew   {
  private:
 
    // Separate tweak dials for COH-CC and COH-NC
-   double fCCNormTwkDial;
-   double fNCNormTwkDial;
+   double fCCCOHNormTwkDial;
+   double fNCCOHNormTwkDial;
+
+   // Separate tweak dials for CC/NC non-COH pi0 production
+   double fCCNonCOHPi0NormTwkDial;
+   double fNCNonCOHPi0NormTwkDial;
 
    // Configured normalization factors
-   double fCurNormCC;
-   double fCurNormNC;
+   double fCurCOHNormCC;
+   double fCurCOHNormNC;
+
+   double fCurNonCOHPi0NormCC;
+   double fCurNonCOHPi0NormNC;
  };
 
 } // rew   namespace
