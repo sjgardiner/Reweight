@@ -228,6 +228,9 @@ typedef enum EGSyst {
   kProdTwkDial_NormCCNonCOHPi0,
   kProdTwkDial_NormNCNonCOHPi0,
 
+  // Energy-dependent CCMEC total cross section (interpolates between models)
+  kXSecTwkDial_SigmaEv_CCMEC,
+
   //
   // Misc
   //

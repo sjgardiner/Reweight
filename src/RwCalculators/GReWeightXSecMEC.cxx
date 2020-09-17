@@ -104,6 +104,7 @@ bool GReWeightXSecMEC::IsHandled(GSyst_t syst) const
   if ( syst == kXSecTwkDial_FracPN_CCMEC ) return true;
   if ( syst == kXSecTwkDial_FracDelta_CCMEC ) return true;
   if ( syst == kXSecTwkDial_XSecShape_CCMEC ) return true;
+  if ( syst == kXSecTwkDial_SigmaEv_CCMEC ) return true;
 
   // If we have an entry for a knob that is interaction type dependent in the
   // GSyst_t -> InteractionType_t map, then this calculator can handle it.
@@ -140,6 +141,10 @@ void GReWeightXSecMEC::SetSystematic(GSyst_t syst, double twk_dial)
     fCCXSecShapeTwkDial = twk_dial;
     return;
   }
+  else if ( syst == kXSecTwkDial_SigmaEv_CCMEC ) {
+    fCCXSecSigmaEvTwkDial = twk_dial;
+    return;
+  }
 
   // We've already checked that there is an entry for the given knob in the map
   // during the previous call to IsHandled(). Therefore, just retrieve the
@@ -164,6 +169,7 @@ void GReWeightXSecMEC::Reset(void)
 
   fDecayAngTwkDial = 0.;
   fCCXSecShapeTwkDial = 0.;
+  fCCXSecSigmaEvTwkDial = 0.;
 
   fFracPN_CCTwkDial = 0.;
   fFracDelta_CCTwkDial = 0.;
@@ -206,6 +212,7 @@ double GReWeightXSecMEC::CalcWeight(const genie::EventRecord& event)
   weight *= this->CalcWeightAngularDist( event );
   weight *= this->CalcWeightPNDelta( event );
   weight *= this->CalcWeightXSecShape( event );
+  weight *= this->CalcWeightSigmaEv( event );
   return weight;
 }
 //_______________________________________________________________________________________
@@ -216,6 +223,7 @@ void GReWeightXSecMEC::Init(void) {
   fFracPN_CCTwkDial = 0.;
   fFracDelta_CCTwkDial = 0.;
   fCCXSecShapeTwkDial = 0.;
+  fCCXSecSigmaEvTwkDial = 0.;
 
   // Set the default normalization for each interaction type (tweak dial = 0
   // corresponds to a normalization factor of 1)
@@ -704,8 +712,77 @@ double GReWeightXSecMEC::GetXSecIntegral(const XSecAlgorithmI* xsec_alg,
     xsec = xsec_alg->Integral( interaction );
   }
 
-  LOG("ReW", pDEBUG) << "MECshape spline check: "
+  LOG("ReW", pDEBUG) << "MEC spline check: "
     << ( spline_computed ? "found" : "not found" );
 
   return xsec;
+}
+//_______________________________________________________________________________________
+double GReWeightXSecMEC::CalcWeightSigmaEv(const genie::EventRecord& event)
+{
+  // Only handle CC events for now (and return unit weight for the others)
+  // TODO: Add capability to tweak the total cross section for NC and EM
+  InteractionType_t type = event.Summary()->ProcInfo().InteractionTypeId();
+  if ( type != kIntWeakCC ) return 1.;
+
+  // Only tweak dial values on the interval [0, 1] make sense for this
+  // knob. Enforce this here regardless of what the user requested.
+  double twk_dial = std::max( std::min(1., fCCXSecSigmaEvTwkDial), 0. );
+
+  // If the tweak dial is set to zero (or is really small) then just return a
+  // weight of unity
+  bool tweaked = ( std::abs(twk_dial) > controls::kASmallNum );
+  if ( !tweaked ) return 1.;
+
+  // Clone the input interaction so that we can clear the set nucleon cluster
+  // PDG code and resonance flags. The total cross section stored in the
+  // event record for the Valencia model includes all contributions.
+  Interaction* interaction = new Interaction( *event.Summary() );
+
+  // Get the total cross section for the default MEC model (including
+  // contributions from both kinds of initial nucleon clusters and both kinds
+  // of diagrams). Clear the hit nucleon cluster PDG code to match the total
+  // cross section stored in the event record.
+  interaction->InitStatePtr()->TgtPtr()->SetHitNucPdg( 0 );
+  interaction->ExclTagPtr()->SetResonance( kNoResonance );
+  double tot_xsec_def = event.XSec();
+
+  // TODO: add check that integral of the default model gives us the same
+  // cross section as the one stored in the event record
+  //double check_tot_xsec_def = fXSecAlgCCDef->Integral( interaction );
+  //LOG("ReW", pDEBUG) << "check_tot_xsec_def = " << check_tot_xsec_def;
+
+  // This is a rather hacky way to get the spline for the Empirical MEC "Default" configuration
+  // using an Algorithm object that has the "Reweight" configuration.
+  // TODO: Consider changing this to something less fragile.
+  std::string old_config = fXSecAlgCCAlt->Id().Config();
+  fXSecAlgCCAlt->SetId( fXSecAlgCCAlt->Id().Name(), "Default" );
+
+  // Set the hit nucleon cluster PDG code to the available values
+  // (empirical MEC needs it)
+  int probe_pdg = interaction->InitState().ProbePdg();
+  int hit_nuc_pdg = genie::pdg::IsNeutrino( probe_pdg ) ? kPdgClusterNN : kPdgClusterPP;
+
+  interaction->InitStatePtr()->TgtPtr()->SetHitNucPdg( hit_nuc_pdg );
+  double tot_xsec_alt = this->GetXSecIntegral( fXSecAlgCCAlt, interaction );
+
+  interaction->InitStatePtr()->TgtPtr()->SetHitNucPdg( kPdgClusterNP );
+  tot_xsec_alt += this->GetXSecIntegral( fXSecAlgCCAlt, interaction );
+
+  fXSecAlgCCAlt->SetId( fXSecAlgCCAlt->Id().Name(), old_config );
+
+  // Compute a tweaked total cross section by interpolating between the two
+  // models
+  double tot_xsec_tweaked = (1. - twk_dial)*tot_xsec_def + twk_dial*tot_xsec_alt;
+
+  // The weight is then the likelihood ratio
+  double weight = tot_xsec_tweaked / tot_xsec_def;
+
+  LOG("ReW", pDEBUG) << "tot_xsec_def = " << tot_xsec_def << ", tot_xsec_alt = " << tot_xsec_alt;
+  LOG("ReW", pDEBUG) << "twk_dial = " << fCCXSecSigmaEvTwkDial << ", weight = " << weight;
+
+  // We don't need the cloned interaction anymore, so delete it
+  delete interaction;
+
+  return weight;
 }

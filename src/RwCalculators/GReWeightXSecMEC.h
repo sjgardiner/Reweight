@@ -53,8 +53,9 @@ namespace rew   {
    double CalcWeightAngularDist(const EventRecord& event);
    double CalcWeightPNDelta(const EventRecord& event);
    double CalcWeightXSecShape(const EventRecord& event);
+   double CalcWeightSigmaEv(const EventRecord& event);
 
-   /// Helper function for CalcWeightXSecShape
+   /// Helper function for CalcWeightXSecShape and CalcWeightSigmaEv
    double GetXSecIntegral(const XSecAlgorithmI* xsec_alg,
      const Interaction* interaction);
 
@@ -100,6 +101,10 @@ namespace rew   {
    /// Tweak dial that interpolates the shape of the CCMEC differential cross
    /// section between models
    double fCCXSecShapeTwkDial;
+
+   /// Tweak dial that interpolates the neutrino energy dependence of the CCMEC
+   /// total cross section between models
+   double fCCXSecSigmaEvTwkDial;
 };
 
 } // rew   namespace
