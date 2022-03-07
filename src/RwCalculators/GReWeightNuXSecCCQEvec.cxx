@@ -114,7 +114,14 @@ double GReWeightNuXSecCCQEvec::CalcWeight(const genie::EventRecord & event)
   if(!is_qe || !is_cc) return 1.;
 
   bool charm = interaction->ExclTag().IsCharmEvent(); // skip CCQE charm
-  if(charm) return 1.;
+  if ( charm ) return 1.;
+
+  bool strange = interaction->ExclTag().IsStrangeEvent(); // skip CCQE strange
+  if ( strange ) return 1.;
+
+  // Skip other CCQE channels that do not produce a final-state nucleon
+  int final_nucleon_pdgc = interaction->RecoilNucleonPdg();
+  if ( !pdg::IsNucleon(final_nucleon_pdgc) ) return 1.;
 
   int nupdg = event.Probe()->Pdg();
   if(nupdg==kPdgNuMu     && !fRewNumu   ) return 1.;
