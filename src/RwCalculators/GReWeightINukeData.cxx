@@ -33,15 +33,19 @@ const GReWeightINukeData *GReWeightINukeData::Instance() {
 }
 
 GReWeightINukeData::GReWeightINukeData() {
-  // Load location of hadron data
-  std::string data_dir = (gSystem->Getenv("GINUKEHADRONDATA")) ?
-             string(gSystem->Getenv("GINUKEHADRONDATA")) :
-             string(gSystem->Getenv("GENIE")) + string("/data/evgen/intranuke");
 
+  // Load location of hadron data used for systematic variations
+  const char* grw = gSystem->Getenv( "GENIE_REWEIGHT" );
+  if ( !grw ) {
+    LOG( "ReW", pFATAL ) << "The GENIE_REWEIGHT environment variable is unset";
+    std::exit( 1 );
+  }
+
+  const std::string data_dir = grw + std::string( "/data/intranuke/tot_xsec/" );
 
   // data files with variations
-  std::string datafile_NAG4 = data_dir + "/tot_xsec/intranuke-fractions-NA2025G4.dat";
-  std::string datafile_NAINCL = data_dir + "/tot_xsec/intranuke-fractions-NA2025INCL.dat";
+  std::string datafile_NAG4 = data_dir + "intranuke-fractions-NA-G4.dat";
+  std::string datafile_NAINCL = data_dir + "intranuke-fractions-NA-INCL.dat";
 
   // verify files exist
   assert( ! gSystem->AccessPathName(datafile_NAG4.  c_str()) );
@@ -51,9 +55,9 @@ GReWeightINukeData::GReWeightINukeData() {
   TTree data_NAG4;
   TTree data_NAINCL;
 
-  data_NAG4.ReadFile(datafile_NAG4.c_str(), 
+  data_NAG4.ReadFile(datafile_NAG4.c_str(),
                    "ke/D:pA_tot/D:pA_el/D:pA_inel/D:pA_cex/D:pA_abs/D:pA_pipro/D:pA_xsec/D");
-  data_NAINCL.ReadFile(datafile_NAINCL.c_str(), 
+  data_NAINCL.ReadFile(datafile_NAINCL.c_str(),
                    "ke/D:pA_tot/D:pA_el/D:pA_inel/D:pA_cex/D:pA_abs/D:pA_pipro/D:pA_xsec/D");
 
   // Load splines
@@ -117,7 +121,7 @@ GReWeightINukeData::~GReWeightINukeData() {
    delete fINCLFracNA_Abs;
    delete fINCLFracNA_PiPro;
 }
-   
+
 bool GReWeightINukeData::IsHandled(GSyst_t syst) const {
   switch(syst) {
     case ( kINukeTwkDial_FrCEx_N   ) :
@@ -181,4 +185,3 @@ double GReWeightINukeData::FateFraction(ModelSwitch_t model, GSyst_t syst, doubl
 
   return fate_frac;
 }
-
