@@ -186,7 +186,7 @@ double GReWeightINukeKinematicsParams::CalcPionWeight(TLorentzVector p, TLorentz
     // mass of 2-3 system
     double m23 = (f2 + f3).M();
 
-    double bias_fix_weight = ThreeBodyLorentzWeightBias(E, f1.M(), f2.M(), f3.M(), m23, t1p, fBiasPiPro); 
+    double bias_fix_weight = ThreeBodyLorentzWeightBias(E, f1.M(), f2.M(), f3.M(), m23, t1p, fBiasPiPro);
     double ave_weight = AvgThreeBodyLorentzWeightBias(E, f1.M(), f2.M(), f3.M(), p.M(), fBiasPiPro);
     weight = bias_fix_weight / ave_weight;
   }
@@ -225,7 +225,7 @@ double GReWeightINukeKinematicsParams::CalcPionWeight(TLorentzVector p, TLorentz
 }
 
 double GReWeightINukeKinematicsParams::CalcWeight(int np_pp, float tlab, float costhcm) {
-  if (np_pp == 0) 
+  if (np_pp == 0)
     return fNPwgt.CalcWeight(tlab, costhcm);
 
   return fPPwgt.CalcWeight(tlab, costhcm);
@@ -282,7 +282,9 @@ void GReWeightINukeKinematicsParams::ReBounce::SetUniverse(int u) {
   fRewt = fCache[u];
 }
 
-double GReWeightINukeKinematicsParams::ReBounce::CalcWeight(float tlab, float costhcm) {
+double GReWeightINukeKinematicsParams::ReBounce::CalcWeight(float tlab,
+  float costhcm)
+{
   // std::cout << "UNIVERSE: " << fUniverse << " VALID: " << ((int)!!fRewt) << " dw: " << ((!fRewt) ? 0. : fRewt->Evaluate(tlab, costhcm)) << std::endl;
   if (!fRewt) return 1;
 
@@ -341,16 +343,23 @@ void ReadhNFile(
 }
 
 std::shared_ptr<BLI2DNonUnifGrid> LoadWgts(std::string fname) {
-  string data_dir = (gSystem->Getenv("GINUKEHADRONDATA")) ?
-             string(gSystem->Getenv("GINUKEHADRONDATA")) :
-             string(gSystem->Getenv("GENIE")) + string("/data/syst/diff_ang_variations/");
+
+  // Load location of hadron data used for systematic variations
+  const char* grw = gSystem->Getenv( "GENIE_REWEIGHT" );
+  if ( !grw ) {
+    LOG( "ReW", pFATAL ) << "The GENIE_REWEIGHT environment variable is unset";
+    std::exit( 1 );
+  }
+
+  const std::string data_dir = grw + std::string( "/data/intranuke/"
+    "diff_ang_variations/" );
 
   // Hard-coded parameters for hadron data, taken from
   // Physics/HadronTransport/INukeHadroData2018.cxx
   const int hN_wgt_nfiles = 20;
   const int hN_wgt_points_per_file = 21;
   const int hN_wgt_npoints = hN_wgt_points_per_file * hN_wgt_nfiles;
-  
+
   double hN_wgt_energies[hN_wgt_nfiles] = {
     50, 100, 150, 200, 250, 300, 350, 400, 450, 500,
     550, 600, 650, 700, 750, 800, 850, 900, 950, 1000
@@ -358,9 +367,9 @@ std::shared_ptr<BLI2DNonUnifGrid> LoadWgts(std::string fname) {
 
   double hN_wgt_costh [hN_wgt_points_per_file] = {};
   double hN_wgt_wgt  [hN_wgt_npoints] = {};
-  
+
   int ipoint=0;
-  
+
   for(int ifile = 0; ifile < hN_wgt_nfiles; ifile++) {
     // build filename
     std::ostringstream hN_datafile;
@@ -369,12 +378,12 @@ std::shared_ptr<BLI2DNonUnifGrid> LoadWgts(std::string fname) {
     // read data
     ReadhNFile(
       hN_datafile.str(), ke, hN_wgt_points_per_file,
-      ipoint, hN_wgt_costh, hN_wgt_wgt,2);
+      ipoint, hN_wgt_costh, hN_wgt_wgt, 2
+    );
   }//loop over files
 
-  return std::shared_ptr<BLI2DNonUnifGrid>(new BLI2DNonUnifGrid(hN_wgt_nfiles,hN_wgt_points_per_file,
-    hN_wgt_energies,hN_wgt_costh,hN_wgt_wgt));
-
+  return std::make_shared< BLI2DNonUnifGrid >( hN_wgt_nfiles,
+    hN_wgt_points_per_file, hN_wgt_energies,hN_wgt_costh, hN_wgt_wgt );
 }
 
 GReWeightINukeKinematicsParams::ReBounce::~ReBounce() {}
@@ -384,9 +393,9 @@ GReWeightINukeKinematicsParams::ReBounce::ReBounce(std::string n):
 
 void GReWeightINukeKinematicsParams::ReBounce::LoadUniverse(int u) {
   // Do nothing if we already have the wgt
-  if (fCache.count(u) > 0) return; 
+  if (fCache.count(u) > 0) return;
 
-  std::string file_name = "diff_ang_univ" + std::to_string(u) + "/" + fName + "/" + fName;
+  std::string file_name = "diff_ang_univ" + std::to_string(u) + "/"
+    + fName + "/" + fName;
   fCache[u] = LoadWgts(file_name);
 }
-
