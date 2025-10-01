@@ -1,7 +1,7 @@
 //____________________________________________________________________________
 /*!
 
-\class    genie::rew::GReWeightINukeData
+\class    genie::rew::GReWeightINukeModelSwitchData
 
 \created  Apr 4, 2025
 
@@ -30,13 +30,13 @@ namespace rew   {
     kRwINukeINCL,
  } ModelSwitch_t;
 
- class GReWeightINukeData
+ class GReWeightINukeModelSwitchData
  {
  public:
-   GReWeightINukeData();
-  ~GReWeightINukeData();
+   GReWeightINukeModelSwitchData();
+  ~GReWeightINukeModelSwitchData();
 
-   static const GReWeightINukeData *Instance();
+   static const GReWeightINukeModelSwitchData *Instance();
 
    bool IsHandled(GSyst_t syst) const;
    double FateFraction(ModelSwitch_t model, GSyst_t syst, double KE) const;

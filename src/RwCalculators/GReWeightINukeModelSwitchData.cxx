@@ -16,23 +16,23 @@
 #include "Framework/Conventions/Units.h"
 #include "Framework/Messenger/Messenger.h"
 #include "RwFramework/GSyst.h"
-#include "RwCalculators/GReWeightINukeData.h"
+#include "RwCalculators/GReWeightINukeModelSwitchData.h"
 
 using namespace genie;
 using namespace genie::rew;
 
 // the Instance
-GReWeightINukeData *theInstance = 0;
+GReWeightINukeModelSwitchData *theInstance = 0;
 
-const GReWeightINukeData *GReWeightINukeData::Instance() {
+const GReWeightINukeModelSwitchData *GReWeightINukeModelSwitchData::Instance() {
 
-  if (theInstance == 0) theInstance = new GReWeightINukeData;
+  if (theInstance == 0) theInstance = new GReWeightINukeModelSwitchData;
 
   return theInstance;
 
 }
 
-GReWeightINukeData::GReWeightINukeData() {
+GReWeightINukeModelSwitchData::GReWeightINukeModelSwitchData() {
 
   // Load location of hadron data used for systematic variations
   const char* grw = gSystem->Getenv( "GENIE_REWEIGHT" );
@@ -92,7 +92,7 @@ GReWeightINukeData::GReWeightINukeData() {
 }
 
 // cleanup splines
-GReWeightINukeData::~GReWeightINukeData() {
+GReWeightINukeModelSwitchData::~GReWeightINukeModelSwitchData() {
    delete fG4PA_Tot;
    delete fG4FracPA_Tot;
    delete fG4FracPA_Inel;
@@ -122,7 +122,7 @@ GReWeightINukeData::~GReWeightINukeData() {
    delete fINCLFracNA_PiPro;
 }
 
-bool GReWeightINukeData::IsHandled(GSyst_t syst) const {
+bool GReWeightINukeModelSwitchData::IsHandled(GSyst_t syst) const {
   switch(syst) {
     case ( kINukeTwkDial_FrCEx_N   ) :
     case ( kINukeTwkDial_FrInel_N  ) :
@@ -136,13 +136,13 @@ bool GReWeightINukeData::IsHandled(GSyst_t syst) const {
 }
 
 //____________________________________________________________________________
-double GReWeightINukeData::FateFraction(ModelSwitch_t model, GSyst_t syst, double kinE) const {
+double GReWeightINukeModelSwitchData::FateFraction(ModelSwitch_t model, GSyst_t syst, double kinE) const {
   double fate_frac = 0.0;
 
   // convert to MeV and
   double ke = kinE / units::MeV;
-  ke = TMath::Max(GReWeightINukeData::fMinKinEnergy, ke);
-  ke = TMath::Min(GReWeightINukeData::fMaxKinEnergy, ke);
+  ke = TMath::Max(GReWeightINukeModelSwitchData::fMinKinEnergy, ke);
+  ke = TMath::Min(GReWeightINukeModelSwitchData::fMaxKinEnergy, ke);
 
   switch (syst) {
     case (kINukeTwkDial_FrCEx_N) :

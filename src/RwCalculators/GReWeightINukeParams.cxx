@@ -139,7 +139,7 @@ GReWeightINukeParams::Fates::Fates(GReWeightINukeParams::HadronType_t ht)
   }
 
   fHadType = ht;
-  fModelSwitch = kNoSwitch; 
+  fModelSwitch = kNoSwitch;
   fTargetA = 0;
 
   this->Reset();
@@ -223,7 +223,7 @@ void GReWeightINukeParams::Fates::SetTwkDial(GSyst_t syst, double val)
     {
       // Leave inelastic as cushion term to absorb the residual fraction in the systematic.
       // Since the fractions sum to 1, this will set the value correctly.
-      if (syst != kINukeTwkDial_FrInel_N) { 
+      if (syst != kINukeTwkDial_FrInel_N) {
         fSystValuesUser[syst]  = 1.;
         fIsCushion[syst] = false;
       }
@@ -242,19 +242,20 @@ double GReWeightINukeParams::Fates::ScaleFactor(
   double KE = p4.Energy() - p4.M(); // kinetic energy
   return this->ScaleFactor(syst, KE);
 }
-     
+
 bool GReWeightINukeParams::Fates::IsInSystKERange(double KE) const {
   return (fSystKELow < 0 || KE >= fSystKELow) && (fSystKEHigh < 0. || KE < fSystKEHigh);
 }
 
 double GReWeightINukeParams::Fates::OneSigmaErr(GSyst_t syst, double KE) const {
   GSystUncertainty * uncert = GSystUncertainty::Instance();
-  const GReWeightINukeData *inuked = GReWeightINukeData::Instance();
+  const GReWeightINukeModelSwitchData* inuked
+    = GReWeightINukeModelSwitchData::Instance();
 
-  LOG("ReW", pNOTICE) << "OneSigmaErr FOR SYST: " << GSyst::AsString(syst) << " is switch: " << fModelSwitch << " is handled: " << inuked->IsHandled(syst); 
+  LOG("ReW", pNOTICE) << "OneSigmaErr FOR SYST: " << GSyst::AsString(syst) << " is switch: " << fModelSwitch << " is handled: " << inuked->IsHandled(syst);
 
   // If we're not handling a model switch, just lookup the error
-  if (fModelSwitch == kNoSwitch) { 
+  if (fModelSwitch == kNoSwitch) {
     return uncert->OneSigmaErr(syst);
   }
   else {
@@ -272,7 +273,7 @@ double GReWeightINukeParams::Fates::OneSigmaErr(GSyst_t syst, double KE) const {
 
       LOG("ReW", pNOTICE) << "OneSigmaErr Model Switch from " << nom_frac << " to " << var_frac << ", scale: " << var_scale;
 
-      return var_scale * one_sigma; 
+      return var_scale * one_sigma;
     }
   }
 
@@ -285,7 +286,7 @@ double GReWeightINukeParams::Fates::ScaleFactor(
   // check if we're in the kinetic energy range for the configured dial
   if (!IsInSystKERange(KE)) return 1.;
 
-  double fractional_error = this->OneSigmaErr(syst, KE); 
+  double fractional_error = this->OneSigmaErr(syst, KE);
   double twk_dial         = this->ActualTwkDial(syst, KE);
 
   double fate_fraction_scale = 1. + twk_dial * fractional_error;

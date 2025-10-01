@@ -28,7 +28,7 @@
 
 // GENIE/Reweight includes
 #include "RwFramework/GSyst.h"
-#include "RwCalculators/GReWeightINukeData.h"
+#include "RwCalculators/GReWeightINukeModelSwitchData.h"
 
 class TLorentzVector;
 
