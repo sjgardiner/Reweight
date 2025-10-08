@@ -139,7 +139,6 @@ GReWeightINukeParams::Fates::Fates(GReWeightINukeParams::HadronType_t ht)
   }
 
   fHadType = ht;
-  fModelSwitch = kNoSwitch;
   fTargetA = 0;
 
   this->Reset();
@@ -160,31 +159,7 @@ void GReWeightINukeParams::Fates::Reset()
   fSystValuesUser.clear();
   fSystValuesActual.clear();
   fIsCushion.clear();
-
-  fSystKELow = -1;
-  fSystKEHigh = -1;
 }
-
-//___________________________________________________________________________
-void GReWeightINukeParams::Fates::SetSystKERange(GSyst_t syst) {
-  if (syst == kINukeTwkDial_INCLLoE_N || syst == kINukeTwkDial_G4LoE_N) {
-    fSystKELow = 0;
-    fSystKEHigh = 0.15 / units::GeV;
-  }
-  else if (syst == kINukeTwkDial_INCLM1E_N || syst == kINukeTwkDial_G4M1E_N) {
-    fSystKELow = 0.15 / units::GeV;
-    fSystKEHigh = 0.3 / units::GeV;
-  }
-  else if (syst == kINukeTwkDial_INCLM2E_N || syst == kINukeTwkDial_G4M2E_N) {
-    fSystKELow = 0.3 / units::GeV;
-    fSystKEHigh = 0.6 / units::GeV;
-  }
-  else if (syst == kINukeTwkDial_INCLHiE_N || syst == kINukeTwkDial_G4HiE_N) {
-    fSystKELow = 0.6 / units::GeV;
-    fSystKEHigh = -1;
-  }
-}
-
 //___________________________________________________________________________
 void GReWeightINukeParams::Fates::Reconfigure()
 {
@@ -205,31 +180,6 @@ void GReWeightINukeParams::Fates::SetTwkDial(GSyst_t syst, double val)
        return;
     }
   }
-  // check if this is a model transformation dial
-  if (this->IsModelTransform(syst)) {
-    if (this->IsG4ModelTransform(syst)) fModelSwitch = kRwINukeG4;
-    else if (this->IsINCLModelTransform(syst)) fModelSwitch = kRwINukeINCL;
-
-    // set the kinematic energy range for this systematic
-    this->SetSystKERange(syst);
-
-    // set all the syst values to 1 -- these will be scaled by the model difference
-    int i=0;
-    while( (syst = (fHadType == kRwINukePion) ?
-            GSyst::NextPionFateSystematic(i++) :
-            GSyst::NextNuclFateSystematic(i++)
-         ) != kNullSystematic
-       )
-    {
-      // Leave inelastic as cushion term to absorb the residual fraction in the systematic.
-      // Since the fractions sum to 1, this will set the value correctly.
-      if (syst != kINukeTwkDial_FrInel_N) {
-        fSystValuesUser[syst]  = 1.;
-        fIsCushion[syst] = false;
-      }
-    }
-    return;
-  }
 
   // update tweaking dial
   fSystValuesUser[syst] = val;
@@ -242,50 +192,10 @@ double GReWeightINukeParams::Fates::ScaleFactor(
   double KE = p4.Energy() - p4.M(); // kinetic energy
   return this->ScaleFactor(syst, KE);
 }
-
-bool GReWeightINukeParams::Fates::IsInSystKERange(double KE) const {
-  return (fSystKELow < 0 || KE >= fSystKELow) && (fSystKEHigh < 0. || KE < fSystKEHigh);
-}
-
-double GReWeightINukeParams::Fates::OneSigmaErr(GSyst_t syst, double KE) const {
-  GSystUncertainty * uncert = GSystUncertainty::Instance();
-  const GReWeightINukeModelSwitchData* inuked
-    = GReWeightINukeModelSwitchData::Instance();
-
-  LOG("ReW", pNOTICE) << "OneSigmaErr FOR SYST: " << GSyst::AsString(syst) << " is switch: " << fModelSwitch << " is handled: " << inuked->IsHandled(syst);
-
-  // If we're not handling a model switch, just lookup the error
-  if (fModelSwitch == kNoSwitch) {
-    return uncert->OneSigmaErr(syst);
-  }
-  else {
-    // otherwise, get the model error, and scale by the one-sigma
-    double one_sigma = uncert->OneSigmaErr((fModelSwitch == kRwINukeG4) ? kINukeTwkDial_G4_N : kINukeTwkDial_INCL_N);
-
-    // If we're scaling to G4 or INCL, fix the scale factor
-    if (inuked->IsHandled(syst)) {
-      double nom_frac = genie::utils::rew::FateFraction(syst, KE, fTargetA, 1.);
-      double var_frac = inuked->FateFraction(fModelSwitch, syst, KE);
-
-      double var_scale = 0;
-      // protect against bad weight
-      if (nom_frac > 1e-6) var_scale = (var_frac - nom_frac) / nom_frac;
-
-      LOG("ReW", pNOTICE) << "OneSigmaErr Model Switch from " << nom_frac << " to " << var_frac << ", scale: " << var_scale;
-
-      return var_scale * one_sigma;
-    }
-  }
-
-  return 0.;
-}
 //___________________________________________________________________________
 double GReWeightINukeParams::Fates::ScaleFactor(
       GSyst_t syst, double KE) const
 {
-  // check if we're in the kinetic energy range for the configured dial
-  if (!IsInSystKERange(KE)) return 1.;
-
   double fractional_error = this->OneSigmaErr(syst, KE);
   double twk_dial         = this->ActualTwkDial(syst, KE);
 
@@ -622,30 +532,15 @@ bool GReWeightINukeParams::Fates::IsHandled(GSyst_t syst) const
 
   return false;
 }
-
-bool GReWeightINukeParams::Fates::IsG4ModelTransform(GSyst_t syst) const
+//___________________________________________________________________________
+double GReWeightINukeParams::Fates::OneSigmaErr(GSyst_t syst, double /*KE*/)
+  const
 {
-  return (syst == kINukeTwkDial_G4_N) || \
-    (syst == kINukeTwkDial_G4LoE_N) || \
-    (syst == kINukeTwkDial_G4M1E_N) || \
-    (syst == kINukeTwkDial_G4M2E_N) || \
-    (syst == kINukeTwkDial_G4HiE_N);
+  // Dummy second argument allows derived classes to do a
+  // kinetic-energy-dependent uncertainty lookup by overriding this function
+  GSystUncertainty * uncert = GSystUncertainty::Instance();
+  return uncert->OneSigmaErr(syst);
 }
-
-bool GReWeightINukeParams::Fates::IsINCLModelTransform(GSyst_t syst) const
-{
-  return (syst == kINukeTwkDial_INCL_N) || \
-    (syst == kINukeTwkDial_INCLLoE_N) || \
-    (syst == kINukeTwkDial_INCLM1E_N) || \
-    (syst == kINukeTwkDial_INCLM2E_N) || \
-    (syst == kINukeTwkDial_INCLHiE_N);
-}
-
-bool GReWeightINukeParams::Fates::IsModelTransform(GSyst_t syst) const
-{
-  return IsINCLModelTransform(syst) || IsG4ModelTransform(syst);
-}
-
 //___________________________________________________________________________
 void GReWeightINukeParams::Fates::AddCushionTerms(void)
 {
@@ -724,22 +619,21 @@ GReWeightINukeParams::MFP::~MFP()
 {
 
 }
-
+//___________________________________________________________________________
 double GReWeightINukeParams::MFP::ScaleFactor(const TLorentzVector & p4) const
 {
   double KE = p4.Energy() - p4.M(); // kinetic energy
   return this->ScaleFactor(KE);
 }
-
 //___________________________________________________________________________
-double GReWeightINukeParams::MFP::ScaleFactor(double KE) const
+double GReWeightINukeParams::MFP::ScaleFactor(double /*KE*/) const
 {
+  // Dummy argument allows derived classes to introduce kinetic
+  // energy dependence
+
   if(! this->IsTweaked()) return 1.;
 
-  // check if we're in the kinetic energy range for the configured dial
-  if (!this->IsInSystKERange(KE)) return 1.;
-
-  GSystUncertainty * uncert = GSystUncertainty::Instance();
+  GSystUncertainty* uncert = GSystUncertainty::Instance();
 
   double mfp_sigma    = uncert->OneSigmaErr(fSyst);
   double mfp_twkdial  = this->TwkDial();
@@ -772,38 +666,12 @@ void GReWeightINukeParams::MFP::Reset(void)
 {
   fTwkDial    = 0.0;
   fIsIncluded = false;
-
-  fSystKELow = -1;
-  fSystKEHigh = -1;
 }
 //___________________________________________________________________________
-bool GReWeightINukeParams::MFP::IsInSystKERange(double KE) const {
-  return (fSystKELow < 0 || KE >= fSystKELow) && (fSystKEHigh < 0. || KE < fSystKEHigh);
-}
-//___________________________________________________________________________
-void GReWeightINukeParams::MFP::SetSystKERange(GSyst_t syst) {
-  if (syst == kINukeTwkDial_MFPLoE_N) {
-    fSystKELow = 0;
-    fSystKEHigh = 0.15 / units::GeV;
-  }
-  else if (syst == kINukeTwkDial_MFPM1E_N) {
-    fSystKELow = 0.15 / units::GeV;
-    fSystKEHigh = 0.3 / units::GeV;
-  }
-  else if (syst == kINukeTwkDial_MFPM2E_N) {
-    fSystKELow = 0.3 / units::GeV;
-    fSystKEHigh = 0.6 / units::GeV;
-  }
-  else if (syst == kINukeTwkDial_MFPHiE_N) {
-    fSystKELow = 0.6 / units::GeV;
-    fSystKEHigh = -1;
-  }
-}
-//___________________________________________________________________________
-void GReWeightINukeParams::MFP::SetTwkDial(GSyst_t syst, double val)
+void GReWeightINukeParams::MFP::SetTwkDial(GSyst_t /*syst*/, double val)
 {
-  SetSystKERange(syst);
+  // Dummy first argument allows multiple MFP dials to be manipulated
+  // by derived classes
   fTwkDial    = val;
   fIsIncluded = true;
 }
-//___________________________________________________________________________
