@@ -142,6 +142,16 @@ bool GReWeightINukeParamsExtra::Fates::IsInSystKERange(double KE) const {
   return (fSystKELow < 0 || KE >= fSystKELow) && (fSystKEHigh < 0. || KE < fSystKEHigh);
 }
 //___________________________________________________________________________
+double GReWeightINukeParamsExtra::Fates::ScaleFactor(
+      GSyst_t syst, double KE) const
+{
+  // check KE
+  if (!IsInSystKERange(KE)) return 1.;
+
+  // delegate to base class
+  return GReWeightINukeParams::Fates::ScaleFactor(syst, KE);
+}
+//___________________________________________________________________________
 double GReWeightINukeParamsExtra::Fates::OneSigmaErr(GSyst_t syst, double KE) const {
   // If we're not handling a model switch dial, then the base class
   // implementation is sufficient and we can delegate to it
@@ -214,11 +224,10 @@ GReWeightINukeParamsExtra::MFP::~MFP()
 //___________________________________________________________________________
 double GReWeightINukeParamsExtra::MFP::ScaleFactor(double KE) const
 {
-  // check if we're in the kinetic energy range for the configured dial
+  // check KE
   if (!this->IsInSystKERange(KE)) return 1.;
 
-  // If we're within the KE range, then the base class implementation
-  // can handle the rest
+  // delegate to base class
   return GReWeightINukeParams::MFP::ScaleFactor( KE );
 }
 //___________________________________________________________________________

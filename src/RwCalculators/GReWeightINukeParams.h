@@ -76,7 +76,7 @@ namespace rew   {
      virtual ~Fates();
 
      double ScaleFactor   (GSyst_t s, const TLorentzVector & p4) const; ///< see next
-     double ScaleFactor   (GSyst_t s, double KE=-1.) const;             ///< fate fraction scale factor = 1 + twk_dial * fractional_err
+     virtual double ScaleFactor   (GSyst_t s, double KE=-1.) const;             ///< fate fraction scale factor = 1 + twk_dial * fractional_err
      bool   IsIncluded    (GSyst_t s) const;                            ///< is included?
      bool   IsCushionTerm (GSyst_t s) const;                            ///< is it a cushion term?
      bool   IsTweaked     (GSyst_t s) const;                            ///< is included & tweaked to non-def value?
@@ -129,7 +129,7 @@ namespace rew   {
      bool   IsTweaked     (void) const;  ///<
      double ChisqPenalty  (void) const;  ///<
      virtual void Reset   (void);        ///<
-     void   SetTwkDial    ( GSyst_t syst, double val);  ///<
+     virtual void SetTwkDial    ( GSyst_t syst, double val);  ///<
 
    protected:
      HadronType_t fHadType;     ///<
