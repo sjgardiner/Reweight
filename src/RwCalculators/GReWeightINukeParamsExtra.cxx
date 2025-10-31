@@ -128,14 +128,10 @@ void GReWeightINukeParamsExtra::Fates::SetTwkDial(GSyst_t syst, double val)
     // Leave inelastic as cushion term to absorb the residual fraction in the systematic.
     // Since the fractions sum to 1, this will set the value correctly.
     if (syst != kINukeTwkDial_FrInel_N) {
-      fSystValuesUser[syst]  = 1.;
+      fSystValuesUser[syst]  = val;
       fIsCushion[syst] = false;
     }
   }
-
-  // update tweaking dial
-  fSystValuesUser[syst] = val;
-  fIsCushion[syst]   = false;
 }
 //___________________________________________________________________________
 bool GReWeightINukeParamsExtra::Fates::IsInSystKERange(double KE) const {
