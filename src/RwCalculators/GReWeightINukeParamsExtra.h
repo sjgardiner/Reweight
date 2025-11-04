@@ -57,6 +57,7 @@ namespace rew   {
 
      virtual void Reset(void) override;
      virtual void SetTwkDial(GSyst_t s, double val) override;
+     virtual double ScaleFactor(GSyst_t s, double KE ) const override;
 
      ModelSwitch_t        fModelSwitch;
      double fSystKELow; ///< Lower limit in kinetic energy range for this systematic
@@ -78,7 +79,7 @@ namespace rew   {
 
      virtual void Reset(void) override;
      virtual double ScaleFactor( double KE ) const override;
-     void SetTwkDial( GSyst_t syst, double val );
+     virtual void SetTwkDial( GSyst_t syst, double val ) override;
      void SetSystKERange( GSyst_t syst );
      bool IsInSystKERange( double KE ) const;
 
