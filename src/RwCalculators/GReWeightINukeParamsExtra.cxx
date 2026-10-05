@@ -56,6 +56,8 @@ GReWeightINukeParamsExtra::Fates::Fates(GReWeightINukeParams::HadronType_t ht)
   : GReWeightINukeParams::Fates::Fates( ht )
 {
   fModelSwitch = kNoSwitch;
+  fSystKELow  = -1.;
+  fSystKEHigh = -1.;
 }
 //___________________________________________________________________________
 GReWeightINukeParamsExtra::Fates::~Fates(void)
@@ -87,6 +89,10 @@ void GReWeightINukeParamsExtra::Fates::SetSystKERange(GSyst_t syst) {
   else if (syst == kINukeTwkDial_INCLHiE_N || syst == kINukeTwkDial_G4HiE_N) {
     fSystKELow = 0.6 / units::GeV;
     fSystKEHigh = -1;
+  }
+  else {
+    fSystKELow = -1.;
+    fSystKEHigh = -1.;
   }
 }
 //___________________________________________________________________________
@@ -211,6 +217,8 @@ bool GReWeightINukeParamsExtra::Fates::IsModelTransform(GSyst_t syst) const
 GReWeightINukeParamsExtra::MFP::MFP(GReWeightINukeParams::HadronType_t ht)
   : GReWeightINukeParams::MFP::MFP( ht )
 {
+  fSystKELow  = -1.;
+  fSystKEHigh = -1.;
 }
 //___________________________________________________________________________
 GReWeightINukeParamsExtra::MFP::~MFP()
@@ -255,6 +263,10 @@ void GReWeightINukeParamsExtra::MFP::SetSystKERange(GSyst_t syst) {
   else if (syst == kINukeTwkDial_MFPHiE_N) {
     fSystKELow = 0.6 / units::GeV;
     fSystKEHigh = -1;
+  }
+  else {
+    fSystKELow = -1.;
+    fSystKEHigh = -1.;
   }
 }
 //___________________________________________________________________________
